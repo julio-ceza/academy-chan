@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './Login.css'; // Arquivo CSS separado
+import './Login.css';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -17,7 +17,7 @@ const Login = () => {
       <div className="login-card">
         <div className="login-header">
           <h1 className="logo">ACDC</h1>
-          <h2 className="subtitle">LOGIN</h2>
+          <h2 className="subtitle">Login</h2>
           <p className="instruction">Entre com suas credenciais para continuar</p>
         </div>
         
