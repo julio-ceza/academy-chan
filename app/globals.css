@@ -1,0 +1,39 @@
+/* globals.css - Adição de classes para o CHAT e Status */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #10B981;    /* Emerald Green */
+  --color-secondary: #1F2937;  /* Dark Gray */
+  --color-accent: #3B82F6;     /* Blue Accent */
+  --color-background: #F4F6F9; /* Light Background */
+  --color-text: #1F2937;
+  --color-card-bg: #FFFFFF;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+/* Utilitários Customizados para Tags de Status */
+.tag-resolved {
+  @apply bg-emerald-100 text-emerald-800 font-semibold;
+}
+.tag-in-progress {
+  @apply bg-amber-100 text-amber-800 font-semibold;
+}
+.tag-pending {
+  @apply bg-red-100 text-red-800 font-semibold;
+}
+
+/* Estilos de chat */
+.message-agent {
+  @apply bg-blue-100 self-start text-gray-800 rounded-bl-none;
+}
+.message-client {
+  @apply bg-primary-saas text-white self-end rounded-br-none;
+}
