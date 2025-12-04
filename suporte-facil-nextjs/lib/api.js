@@ -18,9 +18,9 @@ let MOCK_MESSAGES = [
 ];
 
 let MOCK_TICKETS = [
-  { id: 1, number: '#00123', subject: 'Problema com login', date: '15/11/2024', status: 'Resolvido', clientId: MOCK_CLIENT.id, clientName: MOCK_CLIENT.name, agentName: MOCK_AGENT.name, description: 'Descrição do problema 1' },
-  { id: 2, number: '#00124', subject: 'Dúvida sobre fatura', date: '16/11/2024', status: 'Em andamento', clientId: MOCK_CLIENT.id, clientName: MOCK_CLIENT.name, agentName: MOCK_AGENT.name, description: 'Descrição do problema 2' },
-  { id: 3, number: '#00125', subject: 'Solicitação de reembolso', date: '17/11/2024', status: 'Pendente', clientId: MOCK_CLIENT.id, clientName: MOCK_CLIENT.name, agentName: 'Não Atribuído', description: 'Descrição do problema 3' }
+  { id: 1, number: '#00123', subject: 'Problema com login', date: '15/11/2024', createdAt: '15/11/2024 10:00', resolvedAt: '15/11/2024 16:30', status: 'Resolvido', clientId: MOCK_CLIENT.id, clientName: MOCK_CLIENT.name, agentName: MOCK_AGENT.name, description: 'Descrição do problema 1' },
+  { id: 2, number: '#00124', subject: 'Dúvida sobre fatura', date: '16/11/2024', createdAt: '16/11/2024 14:00', resolvedAt: null, status: 'Em andamento', clientId: MOCK_CLIENT.id, clientName: MOCK_CLIENT.name, agentName: MOCK_AGENT.name, description: 'Descrição do problema 2' },
+  { id: 3, number: '#00125', subject: 'Solicitação de reembolso', date: '17/11/2024', createdAt: '17/11/2024 09:15', resolvedAt: null, status: 'Pendente', clientId: MOCK_CLIENT.id, clientName: MOCK_CLIENT.name, agentName: 'Não Atribuído', description: 'Descrição do problema 3' }
 ];
 
 /**
@@ -47,10 +47,8 @@ export async function fetchTickets(userId, userRole) {
   
   if (userRole === 'client') {
       const userTickets = MOCK_TICKETS.filter(t => t.clientId === userId);
-      // Verifica se o cliente tem ALGUM ticket com status 'Em andamento' ou 'Pendente'
-      const hasOpenTicket = userTickets.some(t => OPEN_STATUSES.includes(t.status));
-      // Retorna a lista de tickets do cliente e a flag de chamado aberto
-      return { data: userTickets, meta: { hasOpenTicket } };
+      // Permite múltiplos chamados abertos
+      return { data: userTickets, meta: { hasOpenTicket: false } };
   }
   
   // Agente vê todos os chamados
@@ -63,21 +61,18 @@ export async function fetchTickets(userId, userRole) {
 export async function createTicket(user, subject, description) {
     await new Promise(resolve => setTimeout(resolve, 800));
 
-    // 1. REGRAS DE NEGÓCIO: Apenas um chamado aberto por cliente
-    const clientOpenTickets = MOCK_TICKETS.filter(t => 
-        t.clientId === user.id && OPEN_STATUSES.includes(t.status)
-    );
-
-    if (clientOpenTickets.length > 0) {
-         throw { response: { data: { message: 'Você já possui um chamado em aberto. Por favor, acompanhe o chamado existente.' } } };
-    }
-
-    // 2. Cria o novo chamado
+    // Cliente pode criar múltiplos chamados
+    // Cria o novo chamado
+    const now = new Date();
+    const createdAt = now.toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    
     const newTicket = {
         id: nextTicketId++,
         number: `#00${122 + nextTicketId}`, // Garante que o ID é único e sequencial (Ex: #00126, #00127)
         subject: subject,
-        date: new Date().toLocaleDateString('pt-BR'),
+        date: now.toLocaleDateString('pt-BR'),
+        createdAt: createdAt,
+        resolvedAt: null,
         status: 'Pendente',
         clientId: user.id,
         clientName: user.name,
@@ -159,9 +154,11 @@ export async function resolveTicket(ticketId, agentName) {
          throw { response: { data: { message: 'Chamado já está resolvido.' } } };
     }
 
-    // Atualiza o status
+    // Atualiza o status e adiciona timestamp de resolução
+    const resolvedAt = new Date().toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
     MOCK_TICKETS[ticketIndex].status = 'Resolvido';
-    MOCK_TICKETS[ticketIndex].agentName = agentName; 
+    MOCK_TICKETS[ticketIndex].agentName = agentName;
+    MOCK_TICKETS[ticketIndex].resolvedAt = resolvedAt; 
 
     // Adiciona uma mensagem de conclusão ao histórico
     const closureMessage = {
@@ -180,6 +177,47 @@ export async function resolveTicket(ticketId, agentName) {
         data: { 
             ...MOCK_TICKETS[ticketIndex], 
             closureMessage: closureMessage 
+        } 
+    };
+}
+
+/**
+ * ❌ Simula o cancelamento de um chamado pelo cliente.
+ */
+export async function cancelTicket(ticketId, clientName) {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const id = parseInt(ticketId);
+    const ticketIndex = MOCK_TICKETS.findIndex(t => t.id === id);
+
+    if (ticketIndex === -1) {
+        throw { response: { data: { message: 'Chamado não encontrado.' } } };
+    }
+
+    const ticket = MOCK_TICKETS[ticketIndex];
+    if (ticket.status === 'Resolvido') {
+         throw { response: { data: { message: 'Chamado já está resolvido e não pode ser cancelado.' } } };
+    }
+
+    // Remove o chamado da lista
+    MOCK_TICKETS.splice(ticketIndex, 1);
+
+    // Adiciona uma mensagem de cancelamento ao histórico
+    const cancelMessage = {
+        id: MOCK_MESSAGES.length + 1,
+        ticketId: id,
+        sender: clientName,
+        senderRole: 'client',
+        timestamp: new Date().toLocaleDateString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        text: 'Chamado cancelado pelo cliente.'
+    };
+    
+    MOCK_MESSAGES.push(cancelMessage);
+
+    return { 
+        data: { 
+            message: 'Chamado cancelado com sucesso.',
+            cancelMessage: cancelMessage 
         } 
     };
 }
