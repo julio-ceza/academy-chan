@@ -1,38 +1,50 @@
 # Suporte Fácil - Deployment Guide
 
-## 📦 Deploy na Vercel
+## 🚨 SOLUÇÃO PARA ERRO 404 NA VERCEL
 
-### Configurações importantes:
+### O problema:
+O erro 404 acontece porque a Vercel está procurando os arquivos no diretório raiz do repositório, mas o projeto Next.js está dentro da pasta `suporte-facil-nextjs`.
 
-1. **Root Directory**: `suporte-facil-nextjs`
-2. **Framework Preset**: Next.js
-3. **Build Command**: `npm run build` (padrão)
-4. **Output Directory**: `.next` (padrão)
-5. **Install Command**: `npm install` (padrão)
+### ✅ SOLUÇÃO - Configure o Root Directory:
 
-### Passos para deploy:
+1. **Acesse seu projeto na Vercel**: https://vercel.com/dashboard
+2. Clique no projeto que está dando erro 404
+3. Vá em **Settings** (Configurações)
+4. Clique em **General**
+5. Procure por **Root Directory**
+6. Clique em **Edit** (Editar)
+7. Digite: `suporte-facil-nextjs`
+8. Clique em **Save** (Salvar)
+9. Volte para **Deployments**
+10. Clique em **Redeploy** no último deployment
 
-1. Acesse https://vercel.com
-2. Clique em "Add New Project"
-3. Importe o repositório `julio-ceza/academy-chan`
-4. **IMPORTANTE**: Configure o Root Directory para `suporte-facil-nextjs`
-5. Deixe as outras configurações no padrão
-6. Clique em "Deploy"
+### 📦 Configurações corretas:
 
-### Verificando o erro 404:
+- **Root Directory**: `suporte-facil-nextjs` ⚠️ **CRÍTICO**
+- **Framework Preset**: Next.js (detectado automaticamente)
+- **Build Command**: `npm run build` (padrão)
+- **Output Directory**: `.next` (padrão)
+- **Install Command**: `npm install` (padrão)
+- **Node Version**: 18.x ou superior
 
-Se você está recebendo erro 404:
+### 🔍 Verificando se está correto:
 
-1. Verifique nas configurações do projeto na Vercel se o **Root Directory** está definido como `suporte-facil-nextjs`
-2. Verifique os logs de build na Vercel para ver se houve erro
-3. Certifique-se de que o build foi concluído com sucesso
+Após configurar o Root Directory e fazer redeploy:
+- Os logs de build devem mostrar que encontrou o `package.json`
+- Deve executar `npm install` com sucesso
+- Deve executar `npm run build` com sucesso
+- O deploy deve completar sem erros
 
-### Re-deploy:
+### 🆕 Deploy do Zero (Alternativa):
 
-Se precisar fazer um novo deploy:
-- Vá em Settings > General > Root Directory
-- Confirme que está `suporte-facil-nextjs`
-- Volte para Deployments e clique em "Redeploy"
+Se preferir começar do zero:
+
+1. **Delete o projeto atual na Vercel**
+2. Acesse: https://vercel.com/new
+3. Importe `julio-ceza/academy-chan`
+4. **ANTES de clicar em Deploy**, expanda "Advanced" ou procure "Root Directory"
+5. Configure: `suporte-facil-nextjs`
+6. Agora clique em **Deploy**
 
 ## 🌐 URLs esperadas:
 
